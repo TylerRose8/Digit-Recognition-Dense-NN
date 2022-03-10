@@ -37,7 +37,8 @@ n_test = X_test_raw.shape[0]
 
 time_normalize = time.time()
 # normalize all features to [0,1]
-X_all = MyUtils.normalize_0_1(np.concatenate((X_train_raw, X_test_raw), axis=0))  # np.concatenate((X_train_raw, X_test_raw),axis=0)
+X_all = MyUtils.normalize_0_1(
+    np.concatenate((X_train_raw, X_test_raw), axis=0))  # np.concatenate((X_train_raw, X_test_raw),axis=0)
 X_train = X_all[:n_train]
 X_test = X_all[n_train:]
 print('Time to normalize data: %.2f' % (time.time() - time_normalize))
@@ -75,9 +76,9 @@ nuts.add_layer(d=k, act='logis')  # output layer,    multi-class classification,
 
 errors = nuts.fit(X_train, y_train, eta=0.1, iterations=20, SGD=False, mini_batch_size=20)
 
-x = np.arange(len(errors))
-plt.plot(x, errors)
-plt.show()
+#x = np.arange(len(errors))
+#plt.plot(x, errors)
+#plt.show()
 
 print(nuts.error(X_train, y_train))
 print(nuts.error(X_test, y_test))

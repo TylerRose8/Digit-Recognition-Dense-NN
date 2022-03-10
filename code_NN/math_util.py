@@ -4,7 +4,7 @@
 
 
 import numpy as np
-import cupy as cp
+#import cupy as cp
 
 # Various math functions, including a collection of activation functions used in NN.
 
@@ -50,7 +50,7 @@ class MyMath:
             import cupy as cp
             return 1 / (1 + cp.exp(-1 * x))
         except ImportError:
-            return 1 / (1 + cp.exp(-1 * x))
+            return 1 / (1 + np.exp(-1 * x))
 
 
     def logis_de(x):
