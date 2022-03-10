@@ -183,7 +183,7 @@ class NeuralNetwork:
                 self._back_propagation(Y, X.shape[0])
                 self._update_weights(eta)
             print("Time for fit-batch: ", time.time() - time_start)
-        return errors, errors2
+        return errors
         # I will leave you to decide how you want to organize the rest of the code, but below is what I used and recommend. Decompose them into private components/functions.
 
         ## prep the data: add bias column; randomly shuffle data training set.
