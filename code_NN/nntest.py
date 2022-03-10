@@ -66,15 +66,14 @@ nuts = nn.NeuralNetwork()
 
 nuts.add_layer(d=d)  # input layer - 0
 
-nuts.add_layer(d=10, act='relu')  # hidden layer - 1
-nuts.add_layer(d=10, act='relu')  # hidden layer - 1
-nuts.add_layer(d=5, act='relu')  # hiddent layer - 2
+nuts.add_layer(d=10, act='logis')  # hidden layer - 1
+nuts.add_layer(d=5, act='logis')  # hiddent layer - 2
 # nuts.add_layer(d = 100, act = 'relu')  # hiddent layer - 3
 # nuts.add_layer(d = 30, act = 'relu')  # hiddent layer - 4
 
-nuts.add_layer(d=k, act='logis')  # output layer,    multi-class classification, #classes = k
+nuts.add_layer(d=k, act='relu')  # output layer,    multi-class classification, #classes = k
 
-errors = nuts.fit(X_train, y_train, eta=0.1, iterations=20, SGD=False, mini_batch_size=20)
+errors = nuts.fit(X_train, y_train, eta=0.1, iterations=5, SGD=False, mini_batch_size=20)
 
 #x = np.arange(len(errors))
 #plt.plot(x, errors)
