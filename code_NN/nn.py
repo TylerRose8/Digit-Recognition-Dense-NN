@@ -147,29 +147,27 @@ class NeuralNetwork:
         errors2 = list()
         if SGD:
             n, d = X.shape
-            n_y, d_y = Y.shape
-            np.reshape(X, (1, -1))
-            np.reshape(Y, (1, -1))
             shuffleCount = 0
             time_start = time.time()
             for itr in range(iterations):
-                batch = np.append(X, Y, axis=1)
                 if shuffleCount == 0 or itr % n == 0:
                     # np.random.shuffle(batch)
+                    shuffle1 = np.random.default_rng(2142)
+                    shuffle1.shuffle(X, axis=0)
+                    shuffle2 = np.random.default_rng(2142)
+                    shuffle2.shuffle(Y, axis=0)
                     shuffleCount += 1
-                batch_X = batch[:, :-1]
-                batch_X = np.split(batch_X, n / mini_batch_size)[itr % round(n / mini_batch_size - 0.25)]
-                batch_y = batch[:, -1]
-                batch_y = np.split(batch_y, n / mini_batch_size)[itr % round(n / mini_batch_size - 0.25)]
+                batch_X = np.array_split(X, mini_batch_size, axis=0)[itr % round(n / mini_batch_size - 0.25)]
+                batch_y = np.array_split(Y, mini_batch_size, axis=0)[itr % round(n / mini_batch_size - 0.25)]
 
-                for itr in range(batch_X.shape[0]):
-                    error = self._feed_forward(batch_X[itr], Y)
-                    errors.append(error)
-                    # error2 = self.error(X, Y)
-                    # errors2.append(error2)
-                    print('error: ', error)
-                    self._back_propagation(batch_y[itr], batch_X.shape[0])
-                    self._update_weights(eta)
+                print('iteration: ', itr)
+                error = self._feed_forward(batch_X, batch_y)
+                errors.append(error)
+                # error2 = self.error(X, Y)
+                # errors2.append(error2)
+                print('error: ', error)
+                self._back_propagation(batch_y, batch_X.shape[0])
+                self._update_weights(eta)
             print("Time for fit-batch: ", time.time() - time_start)
         else:
             time_start = time.time()
