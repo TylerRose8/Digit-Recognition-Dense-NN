@@ -4,7 +4,6 @@
 
 
 import numpy as np
-#import cupy as cp
 
 # Various math functions, including a collection of activation functions used in NN.
 
@@ -17,11 +16,7 @@ class MyMath:
             x: an array type of real numbers
             return: the numpy array where every element is tanh of the corresponding element in array x
         '''
-        try:
-            import cupy as cp
-            return cp.vectorize(cp.tanh)(x)
-        except ImportError:
-            return np.vectorize(np.tanh)(x)
+        return np.tanh(x)
 
 
     def tanh_de(x):
@@ -31,11 +26,7 @@ class MyMath:
             x: an array type of real numbers
             return: the numpy array where every element is tanh derivative of the corresponding element in array x
         '''
-        try:
-            import cupy as cp
-            return 1 - cp.vectorize(cp.tanh)(x)**2
-        except ImportError:
-            return 1 - np.vectorize(np.tanh)(x)**2
+        return 1 - np.tanh(x)**2
 
 
     def logis(x):
@@ -46,11 +37,8 @@ class MyMath:
             return: the numpy array where every element is logistic of
                     the corresponding element in array x
         '''
-        try:
-            import cupy as cp
-            return 1 / (1 + cp.exp(-1 * x))
-        except ImportError:
-            return 1 / (1 + np.exp(-1 * x))
+
+        return 1 / (1 + np.exp(-1 * x))
 
 
     def logis_de(x):
@@ -61,11 +49,7 @@ class MyMath:
             return: the numpy array where every element is logistic derivative of
                     the corresponding element in array x
         '''
-        try:
-            import cupy as cp
-            return cp.exp(-1 * x)/(1 + cp.exp(-1 * x))**2
-        except ImportError:
-            return np.exp(-1 * x)/(1 + np.exp(-1 * x))**2
+        return np.exp(-1 * x)/(1 + np.exp(-1 * x))**2
 
 
     def iden(x):
@@ -76,11 +60,8 @@ class MyMath:
             return: the numpy array where every element is the same as
                     the corresponding element in array x
         '''
-        try:
-            import cupy as cp
-            cp.array(x)
-        except ImportError:
-            np.array(x)
+
+        return np.array(x)
 
 
     def iden_de(x):
@@ -90,11 +71,7 @@ class MyMath:
             x: an array type of real numbers
             return: the numpy array of all ones of the same shape of x.
         '''
-        try:
-            import cupy as cp
-            cp.ones(cp.array(x).shape)
-        except ImportError:
-            np.ones(np.array(x).shape)
+        return np.ones(np.array(x).shape)
 
 
     def relu(x):
@@ -104,11 +81,7 @@ class MyMath:
             x: an array type of real numbers
             return: the numpy array where every element is the max of: zero vs. the corresponding element in x.
         '''
-        try:
-            import cupy as cp
-            return cp.maximum(0, x)
-        except ImportError:
-            return np.maximum(0, x)
+        return np.maximum(0, x)
 
 
     def _relu_de_scaler(x):
@@ -127,8 +100,4 @@ class MyMath:
             x: an array type of real numbers
             return: the numpy array where every element is the _relu_de_scaler of the corresponding element in x.
         '''
-        try:
-            import cupy as cp
-            return cp.maximum(0, x)
-        except ImportError:
-            return np.maximum(0, x)
+        return np.vectorize(MyMath._relu_de_scaler)(x)

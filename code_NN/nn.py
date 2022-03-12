@@ -50,76 +50,26 @@ class NeuralNetwork:
                                                   (self.layers[i - 1].d + 1, self.layers[i].d))
 
     def _feed_forward(self, X, Y=None):
-        cupy_available = False
-        try:
-            import cupy as np
-            import numpy
-            cupy_available = True
-        except ImportError:
-            cupy_available = False
-            import numpy as np
-        if cupy_available:
-            X = np.array(X)
         time_start = time.time()
         self.layers[0].X = X
         for i in range(1, self.L + 1):
-            if cupy_available:
-                self.layers[i - 1].X = np.array(numpy.insert(self.layers[i - 1].X.get(), 0, 1, axis=1))
-            else:
-                self.layers[i - 1].X = np.insert(self.layers[i - 1].X, 0, 1, axis=1)
+            self.layers[i - 1].X = np.insert(self.layers[i - 1].X, 0, 1, axis=1)
             current = self.layers[i]
             previous = self.layers[i - 1]
-            current.W = np.array(current.W)
             current.S = previous.X @ current.W
             current.X = current.act(current.S)
-        if cupy_available:
-            self.layers[0].X = self.layers[0].X.get()
-            for i in range(1, self.L + 1):
-                self.layers[i].X = self.layers[i].X.get()
-                self.layers[i].S = self.layers[i].S.get()
-                self.layers[i].W = self.layers[i].W.get()
-            import numpy as np
         print("Time for feed-forward: ", time.time() - time_start)
         if Y is not None:
             return np.sum(np.square(self.layers[self.L].X - Y)) / X.shape[0]
 
     def _back_propagation(self, y, N):
-        try:
-            import cupy as np
-            cupy_available = True
-        except ImportError:
-            cupy_available = False
-            import numpy as np
         time_start = time.time()
-        if cupy_available:
-            y = np.array(y)
-            self.layers[self.L].X = np.array(self.layers[self.L].X)
-            self.layers[self.L].W = np.array(self.layers[self.L].W)
-            self.layers[self.L].S = np.array(self.layers[self.L].S)
         self.layers[self.L].Delta = 2 * (self.layers[self.L].X - y) * self.layers[self.L].act_de(self.layers[self.L].S)
         self.layers[self.L].G = np.einsum('ij,ik->jk', self.layers[self.L - 1].X, self.layers[self.L].Delta) * 1 / N
         for i in range(self.L - 1, 0, -1):
-            if cupy_available:
-                self.layers[i].X = np.array(self.layers[i].X)
-                self.layers[i].W = np.array(self.layers[i].W)
-                self.layers[i].S = np.array(self.layers[i].S)
             # self.layers[i-1].X = np.array(numpy.insert(self.layers[i-1].X, 0, 1, axis=1))
-            layer = self.layers
-            layer[i].Delta = layer[i].act_de(layer[i].S) * (layer[i + 1].Delta @ layer[i + 1].W[1:].T)
-            layer[i].G = np.einsum('ij,ik->jk', layer[i - 1].X, layer[i].Delta) * 1 / N
-        if cupy_available:
-            self.layers[self.L].X = self.layers[self.L].X.get()
-            self.layers[self.L].W = self.layers[self.L].W.get()
-            self.layers[self.L].S = self.layers[self.L].S.get()
-            self.layers[self.L].Delta = self.layers[self.L].Delta.get()
-            self.layers[self.L].G = self.layers[self.L].G.get()
-            for i in range(self.L - 1, 0, -1):
-                self.layers[i].X = self.layers[i].X.get()
-                self.layers[i].S = self.layers[i].S.get()
-                self.layers[i].W = self.layers[i].W.get()
-                self.layers[i].Delta = self.layers[i].Delta.get()
-                self.layers[i].G = self.layers[i].G.get()
-            import numpy as np
+            self.layers[i].Delta = self.layers[i].act_de(self.layers[i].S) * (self.layers[i + 1].Delta @ self.layers[i + 1].W[1:].T)
+            self.layers[i].G = np.einsum('ij,ik->jk', self.layers[i - 1].X, self.layers[i].Delta) * 1 / N
         print("Time for back-propagation: ", time.time() - time_start)
 
     def _update_weights(self, eta):
@@ -144,7 +94,6 @@ class NeuralNetwork:
         '''
         self._init_weights()  # initialize the edge weights matrices with random numbers.
         errors = list()
-        errors2 = list()
         if SGD:
             n, d = X.shape
             shuffleCount = 0
@@ -163,8 +112,6 @@ class NeuralNetwork:
                 print('iteration: ', itr)
                 error = self._feed_forward(batch_X, batch_y)
                 errors.append(error)
-                # error2 = self.error(X, Y)
-                # errors2.append(error2)
                 print('error: ', error)
                 self._back_propagation(batch_y, batch_X.shape[0])
                 self._update_weights(eta)
@@ -175,8 +122,6 @@ class NeuralNetwork:
                 print('iteration: ', itr)
                 error = self._feed_forward(X, Y)
                 errors.append(error)
-                # error2 = self.error(X, Y)
-                # errors2.append(error2)
                 print('error: ', error)
                 self._back_propagation(Y, X.shape[0])
                 self._update_weights(eta)
