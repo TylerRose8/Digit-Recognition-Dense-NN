@@ -49,37 +49,34 @@ class NeuralNetwork:
             self.layers[i].W = weight_rng.uniform(-1 / math.sqrt(self.layers[i].d), 1 / math.sqrt(self.layers[i].d),
                                                   (self.layers[i - 1].d + 1, self.layers[i].d))
 
-    def _feed_forward(self, X, Y=None):
+    def _feed_forward(self, X):
         time_start = time.time()
         self.layers[0].X = X
         for i in range(1, self.L + 1):
             self.layers[i - 1].X = np.insert(self.layers[i - 1].X, 0, 1, axis=1)
-            current = self.layers[i]
-            previous = self.layers[i - 1]
-            current.S = previous.X @ current.W
-            current.X = current.act(current.S)
+            self.layers[i].S = self.layers[i - 1].X @ self.layers[i].W
+            self.layers[i].X = self.layers[i].act(self.layers[i].S)
         print("Time for feed-forward: ", time.time() - time_start)
-        if Y is not None:
-            return np.sum(np.square(self.layers[self.L].X - Y)) / X.shape[0]
+
 
     def _back_propagation(self, y, N):
         time_start = time.time()
+        for i in range(0, self.L + 1):
+            self.layers[i].G = 0
         self.layers[self.L].Delta = 2 * (self.layers[self.L].X - y) * self.layers[self.L].act_de(self.layers[self.L].S)
-        self.layers[self.L].G = np.einsum('ij,ik->jk', self.layers[self.L - 1].X, self.layers[self.L].Delta) * 1 / N
+        #self.layers[self.L].G = np.einsum('ij,ik->jk', self.layers[self.L - 1].X, self.layers[self.L].Delta) * 1 / N
         for i in range(self.L - 1, 0, -1):
             # self.layers[i-1].X = np.array(numpy.insert(self.layers[i-1].X, 0, 1, axis=1))
             self.layers[i].Delta = self.layers[i].act_de(self.layers[i].S) * (self.layers[i + 1].Delta @ self.layers[i + 1].W[1:].T)
-            self.layers[i].G = np.einsum('ij,ik->jk', self.layers[i - 1].X, self.layers[i].Delta) * 1 / N
+            #elf.layers[i].G = np.einsum('ij,ik->jk', self.layers[i - 1].X, self.layers[i].Delta) * 1 / N
+        for i in range(1, self.L + 1):
+            self.layers[i].G = self.layers[i].G + 1/N * self.layers[i-1].X.T@self.layers[i].Delta
         print("Time for back-propagation: ", time.time() - time_start)
 
     def _update_weights(self, eta):
         time_start = time.time()
         for i in range(1, self.L + 1):
-            self.layers[i].W = self.layers[i].W
-            self.layers[i].G = self.layers[i].G
-            left = self.layers[i].W
-            right = eta * self.layers[i].G
-            self.layers[i].W = np.array(left - right)
+            self.layers[i].W = self.layers[i].W - eta * self.layers[i].G
         print("Time for update weights: ", time.time() - time_start)
 
     def fit(self, X, Y, eta=0.01, iterations=1000, SGD=True, mini_batch_size=1):
@@ -93,7 +90,8 @@ class NeuralNetwork:
             mini_batch_size: the size of each mini batch size, if SGD is True.
         '''
         self._init_weights()  # initialize the edge weights matrices with random numbers.
-        errors = list()
+        sqErrors = list()
+        prcErrors = list()
         if SGD:
             n, d = X.shape
             shuffleCount = 0
@@ -106,13 +104,18 @@ class NeuralNetwork:
                     shuffle2 = np.random.default_rng(2142)
                     shuffle2.shuffle(Y, axis=0)
                     shuffleCount += 1
-                batch_X = np.array_split(X, mini_batch_size, axis=0)[itr % round(n / mini_batch_size - 0.25)]
-                batch_y = np.array_split(Y, mini_batch_size, axis=0)[itr % round(n / mini_batch_size - 0.25)]
+                batched_X = np.array_split(X, mini_batch_size, axis=0)
+                batch_X = batched_X[itr % (len(batched_X)-1)]
+                batched_Y = np.array_split(Y, mini_batch_size, axis=0)
+                batch_y = batched_Y[itr % (len(batched_Y)-1)]
 
                 print('iteration: ', itr)
-                error = self._feed_forward(batch_X, batch_y)
-                errors.append(error)
-                print('error: ', error)
+                self._feed_forward(batch_X)
+                sqError = np.sum(np.square(self.layers[self.L].X - batch_y)) / batch_X.shape[0]
+                prcError = self.predict(batch_X)
+                sqErrors.append(sqError)
+                prcErrors.append(prcError)
+                print('error: ', sqError)
                 self._back_propagation(batch_y, batch_X.shape[0])
                 self._update_weights(eta)
             print("Time for fit-batch: ", time.time() - time_start)
@@ -120,13 +123,16 @@ class NeuralNetwork:
             time_start = time.time()
             for itr in range(iterations):
                 print('iteration: ', itr)
-                error = self._feed_forward(X, Y)
-                errors.append(error)
-                print('error: ', error)
+                self._feed_forward(X)
+                sqError = np.sum(np.square(self.layers[self.L].X - Y)) / X.shape[0]
+                prcError = self.predict(X)
+                sqErrors.append(sqError)
+                prcErrors.append(prcError)
+                print('error: ', sqError)
                 self._back_propagation(Y, X.shape[0])
                 self._update_weights(eta)
             print("Time for fit-batch: ", time.time() - time_start)
-        return errors
+        return sqErrors, prcErrors
         # I will leave you to decide how you want to organize the rest of the code, but below is what I used and recommend. Decompose them into private components/functions.
 
         ## prep the data: add bias column; randomly shuffle data training set.
@@ -158,7 +164,7 @@ class NeuralNetwork:
             return: the percentage of misclassfied samples
         '''
 
-        Y = np.array(Y)
-        error = np.count_nonzero(self.predict(X) - np.argmax(Y, axis=1))
+        Y = np.argmax(np.array(Y),axis=1)
+        error = np.count_nonzero(self.predict(X).T - Y.T)
         # error = np.sum(np.square(self.layers[self.L].X - Y))
-        return error / Y.shape[0]
+        return (error / Y.shape[0])
