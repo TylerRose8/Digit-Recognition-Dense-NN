@@ -56,7 +56,7 @@ class NeuralNetwork:
             self.layers[i - 1].X = np.insert(self.layers[i - 1].X, 0, 1, axis=1)
             self.layers[i].S = self.layers[i - 1].X @ self.layers[i].W
             self.layers[i].X = self.layers[i].act(self.layers[i].S)
-        print("Time for feed-forward: ", time.time() - time_start)
+        # print("Time for feed-forward: ", time.time() - time_start)
 
 
     def _back_propagation(self, y, N):
@@ -71,13 +71,13 @@ class NeuralNetwork:
             #elf.layers[i].G = np.einsum('ij,ik->jk', self.layers[i - 1].X, self.layers[i].Delta) * 1 / N
         for i in range(1, self.L + 1):
             self.layers[i].G = self.layers[i].G + 1/N * self.layers[i-1].X.T@self.layers[i].Delta
-        print("Time for back-propagation: ", time.time() - time_start)
+        # print("Time for back-propagation: ", time.time() - time_start)
 
     def _update_weights(self, eta):
         time_start = time.time()
         for i in range(1, self.L + 1):
             self.layers[i].W = self.layers[i].W - eta * self.layers[i].G
-        print("Time for update weights: ", time.time() - time_start)
+        # print("Time for update weights: ", time.time() - time_start)
 
     def fit(self, X, Y, eta=0.01, iterations=1000, SGD=True, mini_batch_size=1):
         ''' Find the fitting weight matrices for every hidden layer and the output layer. Save them in the layers.
@@ -115,10 +115,10 @@ class NeuralNetwork:
                 prcError = self.predict(batch_X)
                 sqErrors.append(sqError)
                 prcErrors.append(prcError)
-                print('error: ', sqError)
+                # print('error: ', sqError)
                 self._back_propagation(batch_y, batch_X.shape[0])
                 self._update_weights(eta)
-            print("Time for fit-batch: ", time.time() - time_start)
+            # print("Time for fit-batch: ", time.time() - time_start)
         else:
             time_start = time.time()
             for itr in range(iterations):
@@ -128,10 +128,10 @@ class NeuralNetwork:
                 prcError = self.predict(X)
                 sqErrors.append(sqError)
                 prcErrors.append(prcError)
-                print('error: ', sqError)
+                # print('error: ', sqError)
                 self._back_propagation(Y, X.shape[0])
                 self._update_weights(eta)
-            print("Time for fit-batch: ", time.time() - time_start)
+            # print("Time for fit-batch: ", time.time() - time_start)
         return sqErrors, prcErrors
         # I will leave you to decide how you want to organize the rest of the code, but below is what I used and recommend. Decompose them into private components/functions.
 
@@ -165,6 +165,6 @@ class NeuralNetwork:
         '''
 
         Y = np.argmax(np.array(Y),axis=1)
-        error = np.count_nonzero(self.predict(X).T - Y.T)
+        error = np.count_nonzero(self.predict(X) - Y)
         # error = np.sum(np.square(self.layers[self.L].X - Y))
         return (error / Y.shape[0])

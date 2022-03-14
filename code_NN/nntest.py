@@ -66,8 +66,8 @@ nuts = nn.NeuralNetwork()
 
 nuts.add_layer(d=d)  # input layer - 0
 
-nuts.add_layer(d=10, act='tanh')  # hidden layer - 1
-nuts.add_layer(d=3, act='tanh')  # hiddent layer - 2
+nuts.add_layer(d=100, act='relu')  # hidden layer - 1
+nuts.add_layer(d=30, act='relu')  # hiddent layer - 2
 
 
 # nuts.add_layer(d = 100, act = 'relu')  # hiddent layer - 3
@@ -75,7 +75,7 @@ nuts.add_layer(d=3, act='tanh')  # hiddent layer - 2
 
 nuts.add_layer(d=k, act='logis')  # output layer,    multi-class classification, #classes = k
 
-sqError, prcError = nuts.fit(X_train, y_train, eta=0.9, iterations=1000, SGD=True, mini_batch_size=2000)
+sqError, prcError = nuts.fit(X_train, y_train, eta=0.1, iterations=10000, SGD=True, mini_batch_size=20)
 
 #x = np.arange(len(sqError))
 #set y axis range
