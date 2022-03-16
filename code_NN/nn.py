@@ -109,7 +109,8 @@ class NeuralNetwork:
                 batched_Y = np.array_split(Y, mini_batch_size, axis=0)
                 batch_y = batched_Y[itr % (len(batched_Y)-1)]
 
-                print('iteration: ', itr)
+                if itr % 100 == 0:
+                    print('iteration: ', itr)
                 self._feed_forward(batch_X)
                 sqError = np.sum(np.square(self.layers[self.L].X - batch_y)) / batch_X.shape[0]
                 prcError = self.predict(batch_X)
@@ -122,7 +123,8 @@ class NeuralNetwork:
         else:
             time_start = time.time()
             for itr in range(iterations):
-                print('iteration: ', itr)
+                if itr % 100 == 0:
+                    print('iteration: ', itr)
                 self._feed_forward(X)
                 sqError = np.sum(np.square(self.layers[self.L].X - Y)) / X.shape[0]
                 prcError = self.predict(X)
