@@ -83,6 +83,20 @@ class NeuralNetwork:
         if Y is not None:
             return np.sum(np.square(self.layers[self.L].X - Y)) / X.shape[0]
 
+    def _back_propagation2(self, y, N):
+        time_start = time.time()
+        for i in range(0, self.L + 1):
+            self.layers[i].G = 0
+        self.layers[self.L].Delta = 2 * (self.layers[self.L].X - y) * self.layers[self.L].act_de(self.layers[self.L].S)
+        #self.layers[self.L].G = np.einsum('ij,ik->jk', self.layers[self.L - 1].X, self.layers[self.L].Delta) * 1 / N
+        for i in range(self.L - 1, 0, -1):
+            # self.layers[i-1].X = np.array(numpy.insert(self.layers[i-1].X, 0, 1, axis=1))
+            self.layers[i].Delta = self.layers[i].act_de(self.layers[i].S) * (self.layers[i + 1].Delta @ self.layers[i + 1].W[1:].T)
+            #elf.layers[i].G = np.einsum('ij,ik->jk', self.layers[i - 1].X, self.layers[i].Delta) * 1 / N
+        for i in range(1, self.L + 1):
+            self.layers[i].G = self.layers[i].G + 1/N * self.layers[i-1].X.T@self.layers[i].Delta
+        # print("Time for back-propagation: ", time.time() - time_start)
+
     def _back_propagation(self, y, N):
         try:
             import cupy as np
@@ -96,8 +110,11 @@ class NeuralNetwork:
             self.layers[self.L].X = np.array(self.layers[self.L].X)
             self.layers[self.L].W = np.array(self.layers[self.L].W)
             self.layers[self.L].S = np.array(self.layers[self.L].S)
+            self.layers[self.L].G = np.array(self.layers[self.L].G)
         self.layers[self.L].Delta = 2 * (self.layers[self.L].X - y) * self.layers[self.L].act_de(self.layers[self.L].S)
-        self.layers[self.L].G = np.einsum('ij,ik->jk', self.layers[self.L - 1].X, self.layers[self.L].Delta) * 1 / N
+        #self.layers[self.L].G = np.einsum('ij,ik->jk', self.layers[self.L - 1].X, self.layers[self.L].Delta) * 1 / N
+        for i in range(0, self.L + 1):
+            self.layers[i].G = 0
         for i in range(self.L - 1, 0, -1):
             if cupy_available:
                 self.layers[i].X = np.array(self.layers[i].X)
@@ -106,7 +123,9 @@ class NeuralNetwork:
             # self.layers[i-1].X = np.array(numpy.insert(self.layers[i-1].X, 0, 1, axis=1))
             layer = self.layers
             layer[i].Delta = layer[i].act_de(layer[i].S) * (layer[i + 1].Delta @ layer[i + 1].W[1:].T)
-            layer[i].G = np.einsum('ij,ik->jk', layer[i - 1].X, layer[i].Delta) * 1 / N
+            #layer[i].G = np.einsum('ij,ik->jk', layer[i - 1].X, layer[i].Delta) * 1 / N
+            for i in range(1, self.L + 1):
+                self.layers[i].G = self.layers[i].G + 1 / N * self.layers[i - 1].X.T @ self.layers[i].Delta
         if cupy_available:
             self.layers[self.L].X = self.layers[self.L].X.get()
             self.layers[self.L].W = self.layers[self.L].W.get()

@@ -19,9 +19,9 @@ class MyMath:
         '''
         try:
             import cupy as cp
-            return cp.vectorize(cp.tanh)(x)
+            return cp.tanh(x)
         except ImportError:
-            return np.vectorize(np.tanh)(x)
+            return np.tanh(x)
 
 
     def tanh_de(x):
@@ -33,9 +33,9 @@ class MyMath:
         '''
         try:
             import cupy as cp
-            return 1 - cp.vectorize(cp.tanh)(x)**2
+            return 1 - cp.tanh(x)**2
         except ImportError:
-            return 1 - np.vectorize(np.tanh)(x)**2
+            return 1 - np.tanh(x)**2
 
 
     def logis(x):
