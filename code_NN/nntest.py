@@ -75,7 +75,7 @@ nuts.add_layer(d=30, act='relu')  # hiddent layer - 2
 
 nuts.add_layer(d=k, act='logis')  # output layer,    multi-class classification, #classes = k
 
-sqError, prcError = nuts.fit(X_train, y_train, eta=0.1, iterations=1000, SGD=True, mini_batch_size=2)
+nuts.fit(X_train, y_train, eta=0.2, iterations=50, SGD=False, mini_batch_size=5000)
 
 #x = np.arange(len(sqError))
 #set y axis range
